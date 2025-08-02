@@ -12,43 +12,19 @@
           "informationUri": "https://www.glog.ai",
           "rules": [
             {
-              "id": "glog-0e5ac7b2-9a87-4711-a934-776d7af84f6d",
+              "id": "glog-02e58524-6abf-4892-98c7-38b971735188",
               "help": {
                 "text": "",
-                "markdown": "### Description\n\nThe \"Container Privilege Escalation Vulnerability\" in the context of JavaScript applications typically refers to a scenario where an attacker can exploit misconfigurations or vulnerabilities within a containerized environment to gain elevated privileges. This can occur if the application running inside the container is not properly isolated or if it runs with excessive privileges, allowing an attacker to break out of the container and potentially access the host system.\n\nIn the case of a Node.js application with the command `CMD [ \"npm\", \"start\" ]`, the vulnerability might arise if the application is running as the root user inside the container. This can lead to privilege escalation if the application is compromised.\n\n### General Mitigation Advice\n\n1. **Run as Non-Root User**: Ensure that the application inside the container runs as a non-root user. This can be achieved by creating a user in the Dockerfile and switching to that user before running the application.\n\n2. **Use Minimal Base Images**: Use minimal base images to reduce the attack surface. Consider using images like `node:alpine` which are smaller and have fewer packages installed by default.\n\n3. **Apply Principle of Least Privilege**: Ensure that the container has only the necessary permissions and capabilities required to run the application.\n\n4. **Regularly Update Dependencies**: Keep all dependencies up to date to mitigate known vulnerabilities.\n\n5. **Use Security Tools**: Employ tools like Docker Bench for Security to audit your Docker containers and configurations.\n\n### Source Code Fix Recommendation\n\nModify the Dockerfile to run the application as a non-root user:\n\n```dockerfile\n# Use a minimal base image\nFROM node:alpine\n\n# Create a non-root user\nRUN addgroup -S appgroup && adduser -S appuser -G appgroup\n\n# Set the working directory\nWORKDIR /app\n\n# Copy package.json and install dependencies\nCOPY package.json ./\nRUN npm install\n\n# Copy the rest of the application code\nCOPY . .\n\n# Change ownership of the application files\nRUN chown -R appuser:appgroup /app\n\n# Switch to the non-root user\nUSER appuser\n\n# Start the application\nCMD [ \"npm\", \"start\" ]\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following dependencies are required:\n\n- Node.js\n- npm (Node Package Manager)\n\nEnsure that the `package.json` file includes all necessary dependencies for your application.\n\n### OWASP Resources\n\n- [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)\n- [OWASP Node.js Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-250: Execution with Unnecessary Privileges](https://cwe.mitre.org/data/definitions/250.html)\n- [CWE-269: Improper Privilege Management](https://cwe.mitre.org/data/definitions/269.html)"
+                "markdown": "### Description\n\nThe \"Missing CSRF Protection in Express Application\" vulnerability occurs when an Express.js application does not implement Cross-Site Request Forgery (CSRF) protection. CSRF is an attack that tricks the victim into submitting a malicious request. It inherits the identity and privileges of the victim to perform an undesired function on their behalf. This can lead to unauthorized actions being performed on behalf of the user, such as changing account details, making purchases, or other actions that the user is authorized to perform.\n\n### General Mitigation Advice\n\nTo mitigate CSRF vulnerabilities, it is essential to implement CSRF protection mechanisms. This can be done by using middleware that generates and validates CSRF tokens for each user session. The token is included in each form or AJAX request and verified on the server side.\n\n### Source Code Fix Recommendation\n\nTo fix the CSRF vulnerability in an Express application, you can use the `csurf` middleware. Below is an example of how to implement CSRF protection in an Express application:\n\n```javascript\nconst express = require('express');\nconst cookieParser = require('cookie-parser');\nconst csrf = require('csurf');\n\nconst app = express();\n\n// Setup middleware\napp.use(cookieParser());\napp.use(csrf({ cookie: true }));\n\n// Example route\napp.get('/form', (req, res) => {\n  // Pass the csrfToken to the view\n  res.send(`<form action=\"/process\" method=\"POST\">\n              <input type=\"hidden\" name=\"_csrf\" value=\"${req.csrfToken()}\">\n              <button type=\"submit\">Submit</button>\n            </form>`);\n});\n\napp.post('/process', (req, res) => {\n  res.send('Data is being processed');\n});\n\napp.listen(3000, () => {\n  console.log('Server is running on port 3000');\n});\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library dependencies are required:\n\n- `express`\n- `cookie-parser`\n- `csurf`\n\nYou can install these dependencies using npm:\n\n```bash\nnpm install express cookie-parser csurf\n```\n\n### OWASP Resources\n\n- [OWASP Cross-Site Request Forgery (CSRF) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-352: Cross-Site Request Forgery (CSRF)](https://cwe.mitre.org/data/definitions/352.html)"
               },
               "properties": {
                 "tags": [
-                  "dockerfile.security.missing-user.missing-user"
+                  "javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage"
                 ]
               }
             },
             {
-              "id": "glog-1079bb59-f693-4cf8-9036-6624f164751c",
-              "help": {
-                "text": "",
-                "markdown": "### Description\n\nThe \"Code Injection Vulnerability in GitHub Actions Using Untrusted `github` Context Data\" refers to a security flaw where untrusted data from the `github` context is used in a way that could allow an attacker to execute arbitrary code. In the provided example, the `github.actor` is used directly in a shell command without proper sanitization, which could lead to command injection if an attacker is able to manipulate this value.\n\n### Mitigation Advice\n\nTo mitigate this vulnerability, ensure that any data from the `github` context is properly sanitized before being used in shell commands. Avoid using untrusted data directly in shell commands. Instead, use parameterized inputs or escape the data properly.\n\n### Source Code Fix Recommendation\n\nTo fix the specific vulnerability in the provided code snippet, you can use the following approach:\n\n```yaml\nrun: |\n  echo \"${{ inputs.github-token }}\" | docker login ghcr.io -u \"${{ github.actor }}\" --password-stdin\n```\n\nIn this fix, the `${{ github.actor }}` is enclosed in double quotes to prevent command injection. Additionally, consider using a more secure method to handle sensitive data and avoid exposing it in logs.\n\n### Library Dependencies\n\nThe code example provided is a part of a GitHub Actions workflow and does not require any additional JavaScript library dependencies to execute. It relies on the GitHub Actions environment and Docker.\n\n### OWASP Resources\n\n- [OWASP Command Injection](https://owasp.org/www-community/attacks/Command_Injection)\n- [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-77: Improper Neutralization of Special Elements used in a Command ('Command Injection')](https://cwe.mitre.org/data/definitions/77.html)"
-              },
-              "properties": {
-                "tags": [
-                  "yaml.github-actions.security.run-shell-injection.run-shell-injection"
-                ]
-              }
-            },
-            {
-              "id": "glog-ce2f994f-d0a8-41cb-aeb9-f9836ed48951",
-              "help": {
-                "text": "",
-                "markdown": "### Description\n\nThe \"Code Injection Vulnerability in GitHub Actions Using Untrusted `github` Context Data\" refers to a security flaw where untrusted data from the `github` context is used to construct shell commands. This can lead to code injection if the data is not properly sanitized, allowing an attacker to execute arbitrary commands within the GitHub Actions environment. In the provided code snippet, the `TOOL_CMD` variable is constructed using inputs from the `github` context without proper validation or sanitization, making it susceptible to injection attacks.\n\n### General Mitigation Advice\n\n1. **Input Validation and Sanitization**: Always validate and sanitize inputs from untrusted sources. Use whitelisting to allow only expected values.\n2. **Use Safe APIs**: Prefer using APIs or libraries that handle input safely, avoiding direct shell command construction.\n3. **Environment Isolation**: Run potentially dangerous commands in isolated environments where possible, such as containers with limited permissions.\n4. **Least Privilege Principle**: Ensure that the GitHub Actions workflow has the minimum permissions necessary to perform its tasks.\n\n### Source Code Fix Recommendation\n\nTo mitigate the vulnerability, avoid constructing shell commands directly with untrusted input. Instead, use parameterized commands or a safer method to handle inputs. Here's a revised version of the code:\n\n```yaml\nrun: |\n  TOOL_CMD=\"${{ github.action_path }}/glog.sh scan --path $GITHUB_WORKSPACE\"\n  ARGS=()\n  if [ ! -z \"${{ inputs.lang }}\" ]; then\n    ARGS+=(\"--lang\" \"${{ inputs.lang }}\")\n  fi\n  if [ ! -z \"${{ inputs.ignore }}\" ]; then\n    ARGS+=(\"--ignore\" \"${{ inputs.ignore }}\")\n  fi\n  if [ ! -z \"${{ inputs.client }}\" ]; then\n    ARGS+=(\"--client\" \"${{ inputs.client }}\")\n  fi\n  \"$TOOL_CMD\" \"${ARGS[@]}\"\n```\n\n### Library Dependencies\n\nThe code example provided is a shell script executed within a GitHub Actions workflow and does not require additional JavaScript library dependencies to execute. However, ensure that the `glog.sh` script and any tools it depends on are available in the environment.\n\n### OWASP Resources\n\n- [OWASP Command Injection](https://owasp.org/www-community/attacks/Command_Injection)\n- [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-77: Improper Neutralization of Special Elements used in a Command ('Command Injection')](https://cwe.mitre.org/data/definitions/77.html)"
-              },
-              "properties": {
-                "tags": [
-                  "yaml.github-actions.security.run-shell-injection.run-shell-injection"
-                ]
-              }
-            },
-            {
-              "id": "glog-e0f88970-d975-488d-abf2-60ba8bc49d1e",
+              "id": "glog-b1598f5f-bdda-471b-8829-9cdba5f5f93a",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe \"Container Privilege Escalation Vulnerability\" in the context of JavaScript applications typically refers to a situation where an application running inside a container (such as a Docker container) can exploit misconfigurations or vulnerabilities to gain elevated privileges. This can occur if the container is run with excessive privileges or if the application can execute commands that affect the host system.\n\nIn JavaScript applications, this vulnerability can manifest when using Node.js applications that execute shell commands or scripts without proper validation or sanitization. The use of `CMD [ \"npm\", \"start\" ]` in a Dockerfile can be a potential sink if the application being started has vulnerabilities that allow for command injection or if the container is not properly isolated.\n\n### General Mitigation Advice\n\n1. **Least Privilege**: Run containers with the least privileges necessary. Avoid using the `--privileged` flag and minimize the use of `CAP_SYS_ADMIN` and other capabilities.\n   \n2. **User Permissions**: Do not run applications as the root user inside the container. Use a non-root user with limited permissions.\n\n3. **Input Validation**: Ensure that any input that could be used in shell commands is properly validated and sanitized to prevent command injection.\n\n4. **Update Dependencies**: Regularly update your application dependencies to patch known vulnerabilities.\n\n5. **Security Context**: Use Docker security options to limit the container's capabilities and access to the host system.\n\n6. **Network Policies**: Implement network policies to restrict the container's network access.\n\n### Source Code Fix Recommendation\n\nTo mitigate the risk of privilege escalation, ensure that your Dockerfile and application code adhere to best practices:\n\n```dockerfile\n# Use a non-root user\nFROM node:14\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nUSER node\nCMD [ \"npm\", \"start\" ]\n```\n\nIn your Node.js application, avoid using shell commands directly. If necessary, use libraries like `child_process` with caution and ensure inputs are sanitized.\n\n### Library Dependencies\n\nTo execute the code example properly, the following dependencies are typically required:\n\n- Node.js (version 14 or compatible)\n- npm (Node Package Manager)\n\nEnsure that your `package.json` file lists all necessary dependencies for your application.\n\n### OWASP Resources\n\n- [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)\n- [OWASP Node.js Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-250: Execution with Unnecessary Privileges](https://cwe.mitre.org/data/definitions/250.html)\n- [CWE-78: Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')](https://cwe.mitre.org/data/definitions/78.html)"
@@ -60,7 +36,19 @@
               }
             },
             {
-              "id": "glog-953b5801-8c2d-4ca2-a0cb-870286f5e398",
+              "id": "glog-de64a87c-a468-4a25-8d7b-35d25871fb76",
+              "help": {
+                "text": "",
+                "markdown": "### Description\n\nThe \"Container Privilege Escalation Vulnerability\" in the context of JavaScript applications typically refers to a scenario where an attacker can exploit misconfigurations or vulnerabilities within a containerized environment to gain elevated privileges. This can occur if the application running inside the container is not properly isolated or if it runs with excessive privileges, allowing an attacker to break out of the container and potentially access the host system.\n\nIn the case of a Node.js application with the command `CMD [ \"npm\", \"start\" ]`, the vulnerability might arise if the application is running as the root user inside the container. This can lead to privilege escalation if the application is compromised.\n\n### General Mitigation Advice\n\n1. **Run as Non-Root User**: Ensure that the application inside the container runs as a non-root user. This can be achieved by creating a user in the Dockerfile and switching to that user before running the application.\n\n2. **Use Minimal Base Images**: Use minimal base images to reduce the attack surface. Consider using images like `node:alpine` which are smaller and have fewer packages installed by default.\n\n3. **Apply Principle of Least Privilege**: Ensure that the container has only the necessary permissions and capabilities required to run the application.\n\n4. **Regularly Update Dependencies**: Keep all dependencies up to date to mitigate known vulnerabilities.\n\n5. **Use Security Tools**: Employ tools like Docker Bench for Security to audit your Docker containers and configurations.\n\n### Source Code Fix Recommendation\n\nModify the Dockerfile to run the application as a non-root user:\n\n```dockerfile\n# Use a minimal base image\nFROM node:alpine\n\n# Create a non-root user\nRUN addgroup -S appgroup && adduser -S appuser -G appgroup\n\n# Set the working directory\nWORKDIR /app\n\n# Copy package.json and install dependencies\nCOPY package.json ./\nRUN npm install\n\n# Copy the rest of the application code\nCOPY . .\n\n# Change ownership of the application files\nRUN chown -R appuser:appgroup /app\n\n# Switch to the non-root user\nUSER appuser\n\n# Start the application\nCMD [ \"npm\", \"start\" ]\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following dependencies are required:\n\n- Node.js\n- npm (Node Package Manager)\n\nEnsure that the `package.json` file includes all necessary dependencies for your application.\n\n### OWASP Resources\n\n- [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)\n- [OWASP Node.js Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-250: Execution with Unnecessary Privileges](https://cwe.mitre.org/data/definitions/250.html)\n- [CWE-269: Improper Privilege Management](https://cwe.mitre.org/data/definitions/269.html)"
+              },
+              "properties": {
+                "tags": [
+                  "dockerfile.security.missing-user.missing-user"
+                ]
+              }
+            },
+            {
+              "id": "glog-263fafc6-e863-4289-8ad8-b318572b8036",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe \"Missing CSRF Protection in Express Application\" vulnerability occurs when an Express.js application does not implement Cross-Site Request Forgery (CSRF) protection. CSRF is an attack that tricks the victim into submitting a malicious request. It inherits the identity and privileges of the victim to perform an undesired function on their behalf. This can lead to unauthorized actions being performed on behalf of the user, such as changing account details, making purchases, or other actions that the user is authorized to perform.\n\n### General Mitigation Advice\n\nTo mitigate CSRF vulnerabilities, it is essential to implement CSRF protection mechanisms. This can be done by using middleware that generates and validates CSRF tokens for each user session. The token is included in each form or AJAX request and verified on the server side.\n\n### Source Code Fix Recommendation\n\nTo fix the CSRF vulnerability in an Express application, you can use the `csurf` middleware. Below is an example of how to implement CSRF protection in an Express application:\n\n```javascript\nconst express = require('express');\nconst cookieParser = require('cookie-parser');\nconst csrf = require('csurf');\n\nconst app = express();\n\n// Setup middleware\napp.use(cookieParser());\napp.use(csrf({ cookie: true }));\n\n// Example route\napp.get('/form', (req, res) => {\n  // Pass the csrfToken to the view\n  res.send(`<form action=\"/process\" method=\"POST\">\n              <input type=\"hidden\" name=\"_csrf\" value=\"${req.csrfToken()}\">\n              <button type=\"submit\">Submit</button>\n            </form>`);\n});\n\napp.post('/process', (req, res) => {\n  res.send('Data is being processed');\n});\n\napp.listen(3000, () => {\n  console.log('Server is running on port 3000');\n});\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library dependencies are required:\n\n- `express`\n- `cookie-parser`\n- `csurf`\n\nYou can install these dependencies using npm:\n\n```bash\nnpm install express cookie-parser csurf\n```\n\n### OWASP Resources\n\n- [OWASP Cross-Site Request Forgery (CSRF) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-352: Cross-Site Request Forgery (CSRF)](https://cwe.mitre.org/data/definitions/352.html)"
@@ -72,31 +60,7 @@
               }
             },
             {
-              "id": "glog-910c7f5f-fdf2-4000-87f4-1644f32545e2",
-              "help": {
-                "text": "",
-                "markdown": "### Description\n\nThe \"Missing CSRF Protection in Express Application\" vulnerability occurs when an Express.js application does not implement Cross-Site Request Forgery (CSRF) protection. CSRF is an attack that tricks the victim into submitting a malicious request. It inherits the identity and privileges of the victim to perform an undesired function on their behalf. This can lead to unauthorized actions being performed on behalf of the user, such as changing account details, making purchases, or other actions that the user is authorized to perform.\n\n### General Mitigation Advice\n\nTo mitigate CSRF vulnerabilities, it is essential to implement CSRF protection mechanisms. This can be done by using middleware that generates and validates CSRF tokens for each user session. The token is included in each form or AJAX request and verified on the server side.\n\n### Source Code Fix Recommendation\n\nTo fix the CSRF vulnerability in an Express application, you can use the `csurf` middleware. Below is an example of how to implement CSRF protection in an Express application:\n\n```javascript\nconst express = require('express');\nconst cookieParser = require('cookie-parser');\nconst csrf = require('csurf');\n\nconst app = express();\n\n// Setup middleware\napp.use(cookieParser());\napp.use(csrf({ cookie: true }));\n\n// Example route\napp.get('/form', (req, res) => {\n  // Pass the csrfToken to the view\n  res.send(`<form action=\"/process\" method=\"POST\">\n              <input type=\"hidden\" name=\"_csrf\" value=\"${req.csrfToken()}\">\n              <button type=\"submit\">Submit</button>\n            </form>`);\n});\n\napp.post('/process', (req, res) => {\n  res.send('Data is being processed');\n});\n\napp.listen(3000, () => {\n  console.log('Server is running on port 3000');\n});\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library dependencies are required:\n\n- `express`\n- `cookie-parser`\n- `csurf`\n\nYou can install these dependencies using npm:\n\n```bash\nnpm install express cookie-parser csurf\n```\n\n### OWASP Resources\n\n- [OWASP Cross-Site Request Forgery (CSRF) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-352: Cross-Site Request Forgery (CSRF)](https://cwe.mitre.org/data/definitions/352.html)"
-              },
-              "properties": {
-                "tags": [
-                  "javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage"
-                ]
-              }
-            },
-            {
-              "id": "glog-889e4350-5df3-490f-bf7b-a7a325c273d6",
-              "help": {
-                "text": "",
-                "markdown": "### Description\n\nThe \"XSS vulnerability from user-controlled HTML data\" in JavaScript occurs when an application includes untrusted data in a web page without proper validation or escaping. This can allow an attacker to execute arbitrary JavaScript code in the context of the user's browser, leading to potential data theft, session hijacking, or other malicious activities. In the provided code example, the vulnerability arises from concatenating user-controlled data (`users`) directly into a string that is logged to the console.\n\n### General Mitigation Advice\n\n1. **Input Validation**: Validate and sanitize all user inputs to ensure they conform to expected formats and do not contain malicious scripts.\n2. **Output Encoding**: Encode data before rendering it in the browser to prevent execution of malicious scripts.\n3. **Content Security Policy (CSP)**: Implement a strong CSP to restrict the sources from which scripts can be loaded and executed.\n4. **Use Security Libraries**: Utilize libraries that automatically handle input validation and output encoding.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the provided code, ensure that the `users` data is properly sanitized and encoded before being logged. Here is a revised version of the code:\n\n```javascript\nconst sanitizeHtml = require('sanitize-html');\n\nlet safeUsers = sanitizeHtml(users, {\n  allowedTags: [],\n  allowedAttributes: {}\n});\n\nconsole.log(\"Data Retrieved: \" + safeUsers);\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library is required:\n\n- `sanitize-html`: A library used to sanitize HTML input to prevent XSS attacks.\n\n### OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss/)\n- [OWASP XSS Prevention Cheat Sheet](https://owasp.org/www-project-cheat-sheets/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
-              },
-              "properties": {
-                "tags": [
-                  "resources.rules.raw-html-concat"
-                ]
-              }
-            },
-            {
-              "id": "glog-67b2d93e-eaf4-4204-b233-22e2e372714e",
+              "id": "glog-490a6631-0aba-4eb9-8cb9-cb7fefa2b895",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe \"NoSQL JavaScript Injection Vulnerability in MongoDB $where Operator\" is a security flaw that arises when user input is directly embedded into a MongoDB query using the `$where` operator. This operator allows for the execution of JavaScript expressions on the server side, which can be exploited by attackers to inject malicious JavaScript code. This can lead to unauthorized data access, data leakage, or even data manipulation.\n\nIn the provided code snippet, the `username` parameter from the request query is directly inserted into a `$where` clause without proper sanitization or validation. This makes the application vulnerable to injection attacks. For example, an attacker could input a string like `\"' || '2'=='2\"` to bypass authentication checks and retrieve all records from the database.\n\n### General Mitigation Advice\n\n1. **Avoid Using `$where` Operator**: Whenever possible, avoid using the `$where` operator. Use other query operators that do not evaluate JavaScript code.\n\n2. **Input Validation and Sanitization**: Always validate and sanitize user inputs. Use libraries or frameworks that provide built-in protection against injection attacks.\n\n3. **Use Parameterized Queries**: Use parameterized queries or query builders that automatically handle input escaping.\n\n4. **Least Privilege Principle**: Ensure that the database user has the least privileges necessary to perform its tasks.\n\n5. **Regular Security Audits**: Conduct regular security audits and code reviews to identify and fix vulnerabilities.\n\n### Source Code Fix Recommendation\n\nTo fix the vulnerability in the provided code, avoid using the `$where` operator and use a safer query method:\n\n```javascript\nlet username = req.query.username;\nconsole.log(\"request \" + JSON.stringify(username));\nif (typeof username !== 'undefined' && username != \"\") {\n    // Use a direct query instead of $where\n    query = { username: username };\n    console.log(\"Mongo query: \" + JSON.stringify(query));\n    User.find(query, function (err, users) {\n        if (err) {\n            console.log(err);\n            res.json(err);\n        } else {\n            console.log(\"Data Retrieved: \" + users);\n            res.render('userlookup', { title: 'User Lookup', users: users });\n        }\n    });\n} else {\n    res.render('userlookup', { title: 'User Lookup', users: [] });\n}\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library dependencies are required:\n\n- `express`: For handling HTTP requests and responses.\n- `mongoose`: For interacting with MongoDB.\n\n### OWASP Resources\n\n- [OWASP Top Ten Project](https://owasp.org/www-project-top-ten/)\n- [OWASP Cheat Sheet Series - Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-943: Improper Neutralization of Special Elements in Data Query Logic](https://cwe.mitre.org/data/definitions/943.html)"
@@ -108,19 +72,7 @@
               }
             },
             {
-              "id": "glog-6d7791aa-ef61-4467-bea4-44c7ee6920fa",
-              "help": {
-                "text": "",
-                "markdown": "### Description\n\nThe \"XSS vulnerability from user-controlled HTML data\" in JavaScript occurs when an application includes untrusted data in a web page without proper validation or escaping. This can allow an attacker to execute arbitrary JavaScript code in the context of the user's browser, leading to potential data theft, session hijacking, or other malicious activities. In the provided code example, the vulnerability arises from concatenating user-controlled data (`users`) directly into a string that is logged to the console.\n\n### General Mitigation Advice\n\n1. **Input Validation**: Validate and sanitize all user inputs to ensure they conform to expected formats and do not contain malicious scripts.\n2. **Output Encoding**: Encode data before rendering it in the browser to prevent execution of malicious scripts.\n3. **Content Security Policy (CSP)**: Implement a strong CSP to restrict the sources from which scripts can be loaded and executed.\n4. **Use Security Libraries**: Utilize libraries that automatically handle input validation and output encoding.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the provided code, ensure that the `users` data is properly sanitized and encoded before being logged. Here is a revised version of the code:\n\n```javascript\nconst sanitizeHtml = require('sanitize-html');\n\nlet safeUsers = sanitizeHtml(users, {\n  allowedTags: [],\n  allowedAttributes: {}\n});\n\nconsole.log(\"Data Retrieved: \" + safeUsers);\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library is required:\n\n- `sanitize-html`: A library used to sanitize HTML input to prevent XSS attacks.\n\n### OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss/)\n- [OWASP XSS Prevention Cheat Sheet](https://owasp.org/www-project-cheat-sheets/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
-              },
-              "properties": {
-                "tags": [
-                  "resources.rules.raw-html-concat"
-                ]
-              }
-            },
-            {
-              "id": "glog-39c1df5c-ac47-433c-9987-c9260e8bbdbb",
+              "id": "glog-1c5b52f0-22d1-4816-8253-1f0740913a95",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe \"NoSQL JavaScript Injection Vulnerability in MongoDB $where Operator\" is a security issue that arises when user input is directly embedded into a MongoDB query using the `$where` operator. This operator allows for JavaScript execution within the query, which can be exploited by an attacker to execute arbitrary code on the server. In the provided code snippet, the `username` parameter from the request body is directly inserted into a `$where` query without proper validation or sanitization, making it vulnerable to injection attacks.\n\n### General Mitigation Advice\n\n1. **Avoid Using `$where`**: Whenever possible, avoid using the `$where` operator. Use other query operators that do not involve JavaScript execution.\n2. **Input Validation and Sanitization**: Always validate and sanitize user inputs. Ensure that inputs conform to expected formats and types.\n3. **Use Parameterized Queries**: Use parameterized queries or query builders that automatically handle input sanitization.\n4. **Least Privilege Principle**: Ensure that the database user has the least privileges necessary to perform its operations.\n\n### Source Code Fix Recommendation\n\nTo mitigate the vulnerability in the provided code, avoid using the `$where` operator and use a safer query method:\n\n```javascript\nlet username = req.body.username;\nconsole.log(\"request \" + JSON.stringify(username));\nif (typeof username !== 'undefined') {\n    // Use a direct query instead of $where\n    query = { username: username };\n    console.log(\"Mongo query: \" + JSON.stringify(query));\n    User.find(query, function (err, users) {\n        if (err) {\n            console.log(err);\n            res.json(err);\n        } else {\n            console.log(\"Data Retrieved: \" + users);\n            res.json({users});\n        }\n    });\n} else {\n    res.json({});\n}\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library dependencies are required:\n\n- `express`: For handling HTTP requests.\n- `mongoose` or `mongodb`: For interacting with MongoDB.\n\n### OWASP Resources\n\n- [OWASP Top Ten Project](https://owasp.org/www-project-top-ten/)\n- [OWASP Cheat Sheet Series: Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-943: Improper Neutralization of Special Elements in Data Query Logic](https://cwe.mitre.org/data/definitions/943.html)"
@@ -132,7 +84,7 @@
               }
             },
             {
-              "id": "glog-9b70dad4-2420-45ff-a4f3-fe9438983b03",
+              "id": "glog-7b1497d5-df98-4d92-961a-b66766015530",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe \"XSS vulnerability from user-controlled HTML data\" in JavaScript occurs when an application includes untrusted data in a web page without proper validation or escaping. This can allow an attacker to execute arbitrary JavaScript code in the context of the user's browser, leading to potential data theft, session hijacking, or other malicious activities. In the provided code example, the vulnerability arises from concatenating user-controlled data (`users`) directly into a string that is logged to the console.\n\n### General Mitigation Advice\n\n1. **Input Validation**: Validate and sanitize all user inputs to ensure they conform to expected formats and do not contain malicious scripts.\n2. **Output Encoding**: Encode data before rendering it in the browser to prevent execution of malicious scripts.\n3. **Content Security Policy (CSP)**: Implement a strong CSP to restrict the sources from which scripts can be loaded and executed.\n4. **Use Security Libraries**: Utilize libraries that automatically handle input validation and output encoding.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the provided code, ensure that the `users` data is properly sanitized and encoded before being logged. Here is a revised version of the code:\n\n```javascript\nconst sanitizeHtml = require('sanitize-html');\n\nlet safeUsers = sanitizeHtml(users, {\n  allowedTags: [],\n  allowedAttributes: {}\n});\n\nconsole.log(\"Data Retrieved: \" + safeUsers);\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library is required:\n\n- `sanitize-html`: A library used to sanitize HTML input to prevent XSS attacks.\n\n### OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss/)\n- [OWASP XSS Prevention Cheat Sheet](https://owasp.org/www-project-cheat-sheets/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
@@ -144,7 +96,7 @@
               }
             },
             {
-              "id": "glog-20165a83-20b9-4c6b-be76-157e7622faf7",
+              "id": "glog-e81095c9-ffeb-4d13-a358-4cc99f0b5006",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe \"XSS vulnerability from user-controlled HTML data\" in JavaScript occurs when an application includes untrusted data in a web page without proper validation or escaping. This can allow an attacker to execute arbitrary JavaScript code in the context of the user's browser, leading to potential data theft, session hijacking, or other malicious activities. In the provided code example, the vulnerability arises from concatenating user-controlled data (`users`) directly into a string that is logged to the console.\n\n### General Mitigation Advice\n\n1. **Input Validation**: Validate and sanitize all user inputs to ensure they conform to expected formats and do not contain malicious scripts.\n2. **Output Encoding**: Encode data before rendering it in the browser to prevent execution of malicious scripts.\n3. **Content Security Policy (CSP)**: Implement a strong CSP to restrict the sources from which scripts can be loaded and executed.\n4. **Use Security Libraries**: Utilize libraries that automatically handle input validation and output encoding.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the provided code, ensure that the `users` data is properly sanitized and encoded before being logged. Here is a revised version of the code:\n\n```javascript\nconst sanitizeHtml = require('sanitize-html');\n\nlet safeUsers = sanitizeHtml(users, {\n  allowedTags: [],\n  allowedAttributes: {}\n});\n\nconsole.log(\"Data Retrieved: \" + safeUsers);\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library is required:\n\n- `sanitize-html`: A library used to sanitize HTML input to prevent XSS attacks.\n\n### OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss/)\n- [OWASP XSS Prevention Cheat Sheet](https://owasp.org/www-project-cheat-sheets/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
@@ -156,10 +108,10 @@
               }
             },
             {
-              "id": "glog-079da4ac-a3f9-402c-a8c6-3a00b2b5588c",
+              "id": "glog-cbb33a9b-ec4a-4dc2-b87d-24f1dc97113a",
               "help": {
                 "text": "",
-                "markdown": "### Description\n\nThe \"XSS Vulnerability from User-Controlled HTML Data\" occurs when an application includes user-supplied data in web pages without proper validation or escaping, allowing attackers to inject malicious scripts. In JavaScript, this can lead to Cross-Site Scripting (XSS) attacks, where an attacker can execute arbitrary scripts in the context of a user's browser session. This can result in data theft, session hijacking, or other malicious activities.\n\n### Mitigation Advice\n\n1. **Input Validation**: Always validate and sanitize user inputs. Use libraries or frameworks that automatically handle input validation.\n2. **Output Encoding**: Encode data before rendering it in the browser. Use context-appropriate encoding (e.g., HTML, JavaScript, URL).\n3. **Content Security Policy (CSP)**: Implement CSP headers to restrict the sources from which scripts can be loaded.\n4. **Use Security Libraries**: Utilize libraries that help prevent XSS, such as DOMPurify for sanitizing HTML.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the given code snippet, ensure that the data being logged is properly sanitized and encoded. Here is a revised version of the code:\n\n```javascript\nconst DOMPurify = require('dompurify');\nconst { JSDOM } = require('jsdom');\nconst window = new JSDOM('').window;\nconst purify = DOMPurify(window);\n\nconsole.log(\"Login request \" + JSON.stringify(purify.sanitize(req.body)));\n```\n\n### Library Dependencies\n\nTo execute the above code example properly, the following library dependencies are required:\n\n- `dompurify`: A library to sanitize HTML and prevent XSS.\n- `jsdom`: A JavaScript implementation of the DOM and HTML standards, used here to create a window object for DOMPurify.\n\n### OWASP Resources\n\n- [OWASP Content Security Policy Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+                "markdown": "### Description\n\nThe \"XSS vulnerability from user-controlled HTML data\" in JavaScript occurs when an application includes untrusted data in a web page without proper validation or escaping. This can allow an attacker to execute arbitrary JavaScript code in the context of the user's browser, leading to potential data theft, session hijacking, or other malicious activities. In the provided code example, the vulnerability arises from concatenating user-controlled data (`users`) directly into a string that is logged to the console.\n\n### General Mitigation Advice\n\n1. **Input Validation**: Validate and sanitize all user inputs to ensure they conform to expected formats and do not contain malicious scripts.\n2. **Output Encoding**: Encode data before rendering it in the browser to prevent execution of malicious scripts.\n3. **Content Security Policy (CSP)**: Implement a strong CSP to restrict the sources from which scripts can be loaded and executed.\n4. **Use Security Libraries**: Utilize libraries that automatically handle input validation and output encoding.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the provided code, ensure that the `users` data is properly sanitized and encoded before being logged. Here is a revised version of the code:\n\n```javascript\nconst sanitizeHtml = require('sanitize-html');\n\nlet safeUsers = sanitizeHtml(users, {\n  allowedTags: [],\n  allowedAttributes: {}\n});\n\nconsole.log(\"Data Retrieved: \" + safeUsers);\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library is required:\n\n- `sanitize-html`: A library used to sanitize HTML input to prevent XSS attacks.\n\n### OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss/)\n- [OWASP XSS Prevention Cheat Sheet](https://owasp.org/www-project-cheat-sheets/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
               },
               "properties": {
                 "tags": [
@@ -168,19 +120,19 @@
               }
             },
             {
-              "id": "glog-80b371ee-d090-4b7e-90dd-786fe0a64c03",
+              "id": "glog-3cfeab1a-5d4c-44f0-9dff-48c8530ec366",
               "help": {
                 "text": "",
-                "markdown": "### Description\n\nThe use of `alert()` in production code is considered a security vulnerability in JavaScript applications. The `alert()` function is often used for debugging purposes during development, but it should not be present in production environments. It can expose sensitive information, disrupt user experience, and potentially be exploited for social engineering attacks. In the context of the provided code snippet, `alert(JSON.stringify(post_data));`, the use of `alert()` to display serialized JSON data can inadvertently expose sensitive information contained within `post_data`.\n\n### General Mitigation Advice\n\n1. **Remove `alert()` Statements**: Ensure that all `alert()` statements are removed from production code. Use logging mechanisms that are appropriate for the environment, such as server-side logging or client-side logging libraries that do not expose information to end-users.\n\n2. **Use Console for Debugging**: During development, use `console.log()` or other debugging tools instead of `alert()` to inspect data.\n\n3. **Implement Proper Error Handling**: Use structured error handling and logging to capture and manage errors without exposing them to end-users.\n\n4. **Secure Sensitive Data**: Ensure that sensitive data is not exposed in any form to the client-side unless absolutely necessary and properly secured.\n\n### Source Code Fix Recommendation\n\nReplace the `alert()` statement with a logging mechanism that is appropriate for your environment. For example, you can use `console.log()` during development:\n\n```javascript\n// Development environment\nconsole.log(JSON.stringify(post_data));\n\n// Production environment\n// Implement a logging mechanism suitable for production, e.g., sending logs to a server\n```\n\n### Library Dependencies\n\nThe provided code snippet does not require any additional library dependencies to execute properly, as it uses native JavaScript functions.\n\n### OWASP Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n- [OWASP JavaScript Security](https://owasp.org/www-community/attacks/DOM_Based_XSS)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-749: Exposed Dangerous Method or Function](https://cwe.mitre.org/data/definitions/749.html)"
+                "markdown": "### Description\n\nThe \"XSS vulnerability from user-controlled HTML data\" in JavaScript occurs when an application includes untrusted data in a web page without proper validation or escaping. This can allow an attacker to execute arbitrary JavaScript code in the context of the user's browser, leading to potential data theft, session hijacking, or other malicious activities. In the provided code example, the vulnerability arises from concatenating user-controlled data (`users`) directly into a string that is logged to the console.\n\n### General Mitigation Advice\n\n1. **Input Validation**: Validate and sanitize all user inputs to ensure they conform to expected formats and do not contain malicious scripts.\n2. **Output Encoding**: Encode data before rendering it in the browser to prevent execution of malicious scripts.\n3. **Content Security Policy (CSP)**: Implement a strong CSP to restrict the sources from which scripts can be loaded and executed.\n4. **Use Security Libraries**: Utilize libraries that automatically handle input validation and output encoding.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the provided code, ensure that the `users` data is properly sanitized and encoded before being logged. Here is a revised version of the code:\n\n```javascript\nconst sanitizeHtml = require('sanitize-html');\n\nlet safeUsers = sanitizeHtml(users, {\n  allowedTags: [],\n  allowedAttributes: {}\n});\n\nconsole.log(\"Data Retrieved: \" + safeUsers);\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library is required:\n\n- `sanitize-html`: A library used to sanitize HTML input to prevent XSS attacks.\n\n### OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss/)\n- [OWASP XSS Prevention Cheat Sheet](https://owasp.org/www-project-cheat-sheets/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
               },
               "properties": {
                 "tags": [
-                  "resources.rules.javascript-alert"
+                  "resources.rules.raw-html-concat"
                 ]
               }
             },
             {
-              "id": "glog-d316fdb4-cfcb-4ef9-95b1-66d692ea7afe",
+              "id": "glog-b05b031f-3ee4-4348-838e-192c0b6e82a2",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe \"XSS vulnerability from user-controlled HTML data\" occurs when an application includes untrusted data in a web page without proper validation or escaping, allowing an attacker to execute arbitrary JavaScript in the context of the user's browser. In the provided JavaScript code snippet, the `msg` variable is constructed using user-controlled data (`user[0].username` and `user[0].role`). If these values are not properly sanitized, an attacker could inject malicious scripts.\n\n### General Mitigation Advice\n\n1. **Input Validation**: Validate and sanitize all user inputs. Ensure that only expected characters are allowed.\n2. **Output Encoding**: Use proper output encoding/escaping when displaying data in the browser. This ensures that any HTML or JavaScript content is treated as data, not code.\n3. **Content Security Policy (CSP)**: Implement a strong CSP to mitigate the impact of XSS by restricting the sources from which scripts can be loaded.\n4. **Use Security Libraries**: Utilize libraries that automatically handle escaping and encoding, such as DOMPurify for sanitizing HTML.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the given code, ensure that user inputs are properly escaped before being inserted into the HTML. Here is a revised version of the code using a hypothetical `escapeHTML` function:\n\n```javascript\nfunction escapeHTML(str) {\n    return str.replace(/&/g, \"&amp;\")\n              .replace(/</g, \"&lt;\")\n              .replace(/>/g, \"&gt;\")\n              .replace(/\"/g, \"&quot;\")\n              .replace(/'/g, \"&#039;\");\n}\n\nvar msg = \"Logged in as user \" + escapeHTML(user[0].username) + \" with role \" + escapeHTML(user[0].role);\n```\n\n### Library Dependencies\n\nThe code example does not require any external library dependencies to execute properly. However, if you choose to use a library for HTML escaping, such as DOMPurify, you would need to include it in your project.\n\n### OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP Content Security Policy (CSP) Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
@@ -192,7 +144,31 @@
               }
             },
             {
-              "id": "glog-ffdc1b66-fe15-48c7-852b-2c4017532db6",
+              "id": "glog-12142600-dad9-41fb-ba29-cf5f0df6be6c",
+              "help": {
+                "text": "",
+                "markdown": "### Description\n\nThe \"XSS Vulnerability from User-Controlled HTML Data\" occurs when an application includes user-supplied data in web pages without proper validation or escaping, allowing attackers to inject malicious scripts. In JavaScript, this can lead to Cross-Site Scripting (XSS) attacks, where an attacker can execute arbitrary scripts in the context of a user's browser session. This can result in data theft, session hijacking, or other malicious activities.\n\n### Mitigation Advice\n\n1. **Input Validation**: Always validate and sanitize user inputs. Use libraries or frameworks that automatically handle input validation.\n2. **Output Encoding**: Encode data before rendering it in the browser. Use context-appropriate encoding (e.g., HTML, JavaScript, URL).\n3. **Content Security Policy (CSP)**: Implement CSP headers to restrict the sources from which scripts can be loaded.\n4. **Use Security Libraries**: Utilize libraries that help prevent XSS, such as DOMPurify for sanitizing HTML.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the given code snippet, ensure that the data being logged is properly sanitized and encoded. Here is a revised version of the code:\n\n```javascript\nconst DOMPurify = require('dompurify');\nconst { JSDOM } = require('jsdom');\nconst window = new JSDOM('').window;\nconst purify = DOMPurify(window);\n\nconsole.log(\"Login request \" + JSON.stringify(purify.sanitize(req.body)));\n```\n\n### Library Dependencies\n\nTo execute the above code example properly, the following library dependencies are required:\n\n- `dompurify`: A library to sanitize HTML and prevent XSS.\n- `jsdom`: A JavaScript implementation of the DOM and HTML standards, used here to create a window object for DOMPurify.\n\n### OWASP Resources\n\n- [OWASP Content Security Policy Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "tags": [
+                  "resources.rules.raw-html-concat"
+                ]
+              }
+            },
+            {
+              "id": "glog-8d617c1b-eb7a-4c85-bbf4-e0468a0667a0",
+              "help": {
+                "text": "",
+                "markdown": "### Description\n\nThe use of `alert()` in production code is considered a security vulnerability in JavaScript applications. The `alert()` function is often used for debugging purposes during development, but it should not be present in production environments. It can expose sensitive information, disrupt user experience, and potentially be exploited for social engineering attacks. In the context of the provided code snippet, `alert(JSON.stringify(post_data));`, the use of `alert()` to display serialized JSON data can inadvertently expose sensitive information contained within `post_data`.\n\n### General Mitigation Advice\n\n1. **Remove `alert()` Statements**: Ensure that all `alert()` statements are removed from production code. Use logging mechanisms that are appropriate for the environment, such as server-side logging or client-side logging libraries that do not expose information to end-users.\n\n2. **Use Console for Debugging**: During development, use `console.log()` or other debugging tools instead of `alert()` to inspect data.\n\n3. **Implement Proper Error Handling**: Use structured error handling and logging to capture and manage errors without exposing them to end-users.\n\n4. **Secure Sensitive Data**: Ensure that sensitive data is not exposed in any form to the client-side unless absolutely necessary and properly secured.\n\n### Source Code Fix Recommendation\n\nReplace the `alert()` statement with a logging mechanism that is appropriate for your environment. For example, you can use `console.log()` during development:\n\n```javascript\n// Development environment\nconsole.log(JSON.stringify(post_data));\n\n// Production environment\n// Implement a logging mechanism suitable for production, e.g., sending logs to a server\n```\n\n### Library Dependencies\n\nThe provided code snippet does not require any additional library dependencies to execute properly, as it uses native JavaScript functions.\n\n### OWASP Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n- [OWASP JavaScript Security](https://owasp.org/www-community/attacks/DOM_Based_XSS)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-749: Exposed Dangerous Method or Function](https://cwe.mitre.org/data/definitions/749.html)"
+              },
+              "properties": {
+                "tags": [
+                  "resources.rules.javascript-alert"
+                ]
+              }
+            },
+            {
+              "id": "glog-c75c5df9-2545-4367-920a-2147a79b5602",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe vulnerability arises when user-controlled data is directly inserted into the DOM using jQuery's `.html()` method. This can lead to Cross-Site Scripting (XSS) attacks if the data is not properly sanitized or escaped. XSS vulnerabilities allow attackers to inject malicious scripts into web pages viewed by other users, potentially leading to data theft, session hijacking, or other malicious activities.\n\n### General Mitigation Advice\n\n1. **Sanitize Input**: Always sanitize user input on the server side before processing it.\n2. **Escape Output**: Use libraries or functions to escape HTML entities before inserting user data into the DOM.\n3. **Use `.text()` Instead of `.html()`**: If you do not need to insert HTML, use `.text()` to insert plain text, which automatically escapes HTML entities.\n4. **Content Security Policy (CSP)**: Implement a strong CSP to mitigate the impact of XSS attacks.\n\n### Source Code Fix Recommendation\n\nInstead of using `.html()`, use `.text()` to ensure that any HTML tags in the user input are escaped:\n\n```javascript\n$('#response').text(msg.msg);\n```\n\n### Library Dependencies\n\nTo execute the code example properly, the following library dependency is required:\n\n- jQuery\n\n### Relevant OWASP Resources\n\n- [OWASP Cross Site Scripting (XSS)](https://owasp.org/www-community/attacks/xss/)\n- [OWASP XSS Prevention Cheat Sheet](https://owasp.org/www-project-cheat-sheets/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
@@ -204,7 +180,7 @@
               }
             },
             {
-              "id": "glog-8597c8e9-521b-4902-b320-b48997f3ab5c",
+              "id": "glog-0729dd3e-333c-43d5-8128-f3a17a872837",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe XSS (Cross-Site Scripting) vulnerability in jQuery's `html` function arises when untrusted data is inserted directly into the DOM without proper sanitization. This can allow attackers to inject malicious scripts into web pages, potentially leading to unauthorized actions, data theft, or other malicious activities. The specific vulnerability sink in the code example is:\n\n```javascript\n$('#response').html(msg.msg);\n```\n\nIf `msg.msg` contains untrusted data, it can be exploited to execute arbitrary JavaScript code in the context of the user's browser session.\n\n### General Mitigation Advice\n\n1. **Sanitize Input**: Always sanitize and validate input data before inserting it into the DOM. Use libraries like DOMPurify to clean HTML content.\n2. **Use Text Methods**: Prefer using `.text()` over `.html()` when inserting user-generated content, as it automatically escapes HTML.\n3. **Content Security Policy (CSP)**: Implement a strong Content Security Policy to mitigate the impact of XSS attacks.\n4. **Escape Data**: Ensure that any data inserted into the DOM is properly escaped to prevent script execution.\n\n### Source Code Fix Recommendation\n\nTo mitigate the XSS vulnerability in the given code, use the `.text()` method instead of `.html()` if the content does not need to be HTML:\n\n```javascript\n$('#response').text(msg.msg);\n```\n\nIf HTML content is necessary, sanitize it using a library like DOMPurify:\n\n```javascript\n// Assuming DOMPurify is included in your project\n$('#response').html(DOMPurify.sanitize(msg.msg));\n```\n\n### Library Dependencies\n\nTo execute the code example with the recommended fix, the following library dependencies are required:\n\n- jQuery\n- DOMPurify (if sanitizing HTML content)\n\n### OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n- [OWASP Content Security Policy (CSP) Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
@@ -216,43 +192,7 @@
               }
             },
             {
-              "id": "glog-7c60b089-3332-4858-9eab-5c6ca228a5de",
-              "help": {
-                "text": "",
-                "markdown": "### Description\n\nThe \"Writable Root Filesystem Vulnerability in 'mongo' Service\" refers to a security issue where the root filesystem of a container running a MongoDB service is writable. This can lead to unauthorized modifications of the filesystem, potentially allowing an attacker to alter or delete critical files, install malicious software, or escalate privileges. In JavaScript applications using MongoDB, this vulnerability can be particularly dangerous if the application is running in a containerized environment with improper filesystem permissions.\n\n### General Mitigation Advice\n\n1. **Use Read-Only Filesystems**: Configure your container to use a read-only root filesystem. This can be done by setting the `readOnlyRootFilesystem` option to `true` in your container's security context.\n\n2. **Least Privilege Principle**: Ensure that the application runs with the least privileges necessary. Avoid running the MongoDB service as the root user.\n\n3. **Regular Updates**: Keep your MongoDB and related dependencies up to date to benefit from the latest security patches.\n\n4. **Network Security**: Restrict network access to the MongoDB service to only trusted sources.\n\n5. **Environment Variables**: Avoid storing sensitive information in environment variables that can be accessed by unauthorized users.\n\n### Source Code Fix Recommendation\n\nTo mitigate the writable root filesystem vulnerability, ensure that your container configuration specifies a read-only root filesystem. Here is an example of how you might configure this in a Kubernetes Pod specification:\n\n```yaml\napiVersion: v1\nkind: Pod\nmetadata:\n  name: mongo\nspec:\n  containers:\n  - name: mongo\n    image: mongo:latest\n    securityContext:\n      readOnlyRootFilesystem: true\n    volumeMounts:\n    - name: mongo-data\n      mountPath: /data/db\n  volumes:\n  - name: mongo-data\n    emptyDir: {}\n```\n\n### Library Dependencies\n\nTo execute a basic MongoDB service in a JavaScript application, you will typically need the following dependencies:\n\n- `mongodb`: The official MongoDB driver for Node.js.\n- `dotenv`: For managing environment variables securely.\n\nYou can install these dependencies using npm:\n\n```bash\nnpm install mongodb dotenv\n```\n\n### OWASP Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-276: Incorrect Default Permissions](https://cwe.mitre.org/data/definitions/276.html)\n- [CWE-732: Incorrect Permission Assignment for Critical Resource](https://cwe.mitre.org/data/definitions/732.html)\n\nThese links have been verified to be active and accessible to anonymous users."
-              },
-              "properties": {
-                "tags": [
-                  "yaml.docker-compose.security.writable-filesystem-service.writable-filesystem-service"
-                ]
-              }
-            },
-            {
-              "id": "glog-284888d8-4bc2-4038-8a0d-b5f1959943ce",
-              "help": {
-                "text": "",
-                "markdown": "### Description\n\nThe \"Privilege Escalation Vulnerability in 'mongo' Service\" in JavaScript typically arises when an application improperly manages user permissions and access controls when interacting with a MongoDB database. This can allow an attacker to gain unauthorized access to sensitive data or perform actions that should be restricted. The vulnerability often occurs due to improper validation of user roles or insufficient checks on user input, leading to unauthorized privilege escalation.\n\n### General Mitigation Advice\n\n1. **Implement Proper Access Controls**: Ensure that your application enforces strict access controls based on user roles. Use role-based access control (RBAC) to limit what actions users can perform.\n\n2. **Validate User Input**: Always validate and sanitize user inputs to prevent injection attacks that could lead to privilege escalation.\n\n3. **Use Least Privilege Principle**: Configure your MongoDB user accounts with the least privileges necessary for their tasks. Avoid using admin accounts for regular operations.\n\n4. **Regular Security Audits**: Conduct regular security audits and code reviews to identify and fix potential vulnerabilities.\n\n5. **Update Dependencies**: Keep your MongoDB and related libraries up to date with the latest security patches.\n\n### Source Code Fix Recommendation\n\nTo mitigate privilege escalation vulnerabilities, ensure that your code properly checks user roles and permissions before executing any database operations. Here's an example fix:\n\n```javascript\n// Required library dependencies\nconst { MongoClient } = require('mongodb');\n\n// Example function to check user role before performing an action\nasync function performDatabaseAction(userId, action) {\n    const client = new MongoClient('mongodb://localhost:27017', { useUnifiedTopology: true });\n\n    try {\n        await client.connect();\n        const db = client.db('yourDatabase');\n        const usersCollection = db.collection('users');\n\n        // Fetch user role from the database\n        const user = await usersCollection.findOne({ _id: userId });\n        if (!user) {\n            throw new Error('User not found');\n        }\n\n        // Check if the user has the required role\n        if (user.role !== 'admin') {\n            throw new Error('Insufficient privileges');\n        }\n\n        // Perform the action if the user has the required role\n        await action();\n    } catch (error) {\n        console.error('Error performing database action:', error);\n    } finally {\n        await client.close();\n    }\n}\n```\n\n### Library Dependencies\n\nTo execute the above code example, you need the following library:\n\n- `mongodb`: This is the official MongoDB driver for Node.js, which allows you to interact with MongoDB databases.\n\n### Relevant OWASP Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-269: Improper Privilege Management](https://cwe.mitre.org/data/definitions/269.html)"
-              },
-              "properties": {
-                "tags": [
-                  "yaml.docker-compose.security.no-new-privileges.no-new-privileges"
-                ]
-              }
-            },
-            {
-              "id": "glog-b3e09015-3457-4d70-a8cf-d59420703ad6",
-              "help": {
-                "text": "",
-                "markdown": "### Description\n\nThe \"Privilege Escalation Vulnerability in 'mongo' Service\" refers to a security flaw where an attacker can gain unauthorized elevated access to the MongoDB service. This can occur due to misconfigurations or insecure default settings, allowing attackers to exploit the service and potentially access or manipulate sensitive data.\n\n### General Mitigation Advice\n\n1. **Authentication and Authorization**: Ensure that MongoDB authentication is enabled. Use role-based access control (RBAC) to limit user permissions to the minimum necessary.\n\n2. **Network Security**: Bind MongoDB to localhost or use a VPN to restrict access to trusted networks. Avoid exposing MongoDB directly to the internet.\n\n3. **Data Encryption**: Use TLS/SSL to encrypt data in transit. Enable encryption at rest to protect stored data.\n\n4. **Regular Updates**: Keep MongoDB and its dependencies up to date with the latest security patches.\n\n5. **Configuration Management**: Use configuration management tools to enforce security best practices and prevent unauthorized changes.\n\n### Source Code Fix Recommendation\n\nTo mitigate the privilege escalation vulnerability, modify the MongoDB configuration to enable authentication and restrict network access. Below is an example of a secure configuration:\n\n```yaml\nmongo:\n    image: mongo:latest\n    ports:\n      - 127.0.0.1:27017:27017  # Bind to localhost\n    environment:\n      - MONGO_INITDB_ROOT_USERNAME=admin\n      - MONGO_INITDB_ROOT_PASSWORD=securepassword\n    volumes:\n      - mongo:/data/db\n    command: --auth  # Enable authentication\n```\n\n### Library Dependencies\n\nTo execute the above configuration, you need the following dependencies:\n\n- Docker: To run the MongoDB container.\n- MongoDB: The database service itself.\n\n### OWASP Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-269: Improper Privilege Management](https://cwe.mitre.org/data/definitions/269.html)\n- [CWE-284: Improper Access Control](https://cwe.mitre.org/data/definitions/284.html)"
-              },
-              "properties": {
-                "tags": [
-                  "resources.rules.no-new-privileges"
-                ]
-              }
-            },
-            {
-              "id": "glog-10881669-b328-4465-becd-e56016ba2390",
+              "id": "glog-4abac265-866b-4867-802f-f9f1e9c8f922",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe use of `alert()` in production code is considered a security vulnerability in JavaScript applications. The `alert()` function is often used for debugging purposes during development to display messages to the user. However, leaving `alert()` calls in production code can lead to several issues:\n\n1. **Security Risks**: Attackers can exploit `alert()` to execute arbitrary scripts, especially in the context of Cross-Site Scripting (XSS) attacks.\n2. **User Experience**: `alert()` creates modal dialogs that can disrupt the user experience by blocking interaction with the page until the dialog is dismissed.\n3. **Performance**: Excessive use of `alert()` can degrade the performance of the application, as it interrupts the normal flow of execution.\n\n### General Mitigation Advice\n\n- **Remove `alert()` Calls**: Ensure that all `alert()` calls are removed from production code. Use logging mechanisms or other non-blocking notification systems for debugging and user notifications.\n- **Use Console Logging**: Replace `alert()` with `console.log()` for debugging purposes. This does not interrupt the user experience and is more suitable for development.\n- **Implement Proper Error Handling**: Use structured error handling mechanisms to manage errors and display user-friendly messages without using `alert()`.\n\n### Source Code Fix Recommendation\n\nReplace the `alert(\"failure\");` call with a more appropriate error handling mechanism. For example, you can use `console.error()` to log the error and display a non-blocking notification to the user.\n\n```javascript\n// Original vulnerable code\nalert(\"failure\");\n\n// Fixed code\nconsole.error(\"An error occurred: failure\");\n// Optionally, use a non-blocking notification library to inform the user\n// Example: Using a hypothetical notification library\n// notifyUser(\"An error occurred. Please try again.\");\n```\n\n### Library Dependencies\n\nThe code example provided does not require any additional library dependencies to execute properly. However, if you choose to implement a non-blocking notification system, you may need to include a library for that purpose.\n\n### Relevant OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
@@ -264,7 +204,43 @@
               }
             },
             {
-              "id": "glog-b16a4659-a301-43a7-abfe-fa5d154cc943",
+              "id": "glog-94888d3a-222e-4222-8c0f-8b4f268f37a1",
+              "help": {
+                "text": "",
+                "markdown": "### Description\n\nThe \"Writable Root Filesystem Vulnerability in 'mongo' Service\" refers to a security issue where the root filesystem of a container running a MongoDB service is writable. This can lead to unauthorized modifications of the filesystem, potentially allowing an attacker to alter or delete critical files, install malicious software, or escalate privileges. In JavaScript applications using MongoDB, this vulnerability can be particularly dangerous if the application is running in a containerized environment with improper filesystem permissions.\n\n### General Mitigation Advice\n\n1. **Use Read-Only Filesystems**: Configure your container to use a read-only root filesystem. This can be done by setting the `readOnlyRootFilesystem` option to `true` in your container's security context.\n\n2. **Least Privilege Principle**: Ensure that the application runs with the least privileges necessary. Avoid running the MongoDB service as the root user.\n\n3. **Regular Updates**: Keep your MongoDB and related dependencies up to date to benefit from the latest security patches.\n\n4. **Network Security**: Restrict network access to the MongoDB service to only trusted sources.\n\n5. **Environment Variables**: Avoid storing sensitive information in environment variables that can be accessed by unauthorized users.\n\n### Source Code Fix Recommendation\n\nTo mitigate the writable root filesystem vulnerability, ensure that your container configuration specifies a read-only root filesystem. Here is an example of how you might configure this in a Kubernetes Pod specification:\n\n```yaml\napiVersion: v1\nkind: Pod\nmetadata:\n  name: mongo\nspec:\n  containers:\n  - name: mongo\n    image: mongo:latest\n    securityContext:\n      readOnlyRootFilesystem: true\n    volumeMounts:\n    - name: mongo-data\n      mountPath: /data/db\n  volumes:\n  - name: mongo-data\n    emptyDir: {}\n```\n\n### Library Dependencies\n\nTo execute a basic MongoDB service in a JavaScript application, you will typically need the following dependencies:\n\n- `mongodb`: The official MongoDB driver for Node.js.\n- `dotenv`: For managing environment variables securely.\n\nYou can install these dependencies using npm:\n\n```bash\nnpm install mongodb dotenv\n```\n\n### OWASP Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-276: Incorrect Default Permissions](https://cwe.mitre.org/data/definitions/276.html)\n- [CWE-732: Incorrect Permission Assignment for Critical Resource](https://cwe.mitre.org/data/definitions/732.html)\n\nThese links have been verified to be active and accessible to anonymous users."
+              },
+              "properties": {
+                "tags": [
+                  "yaml.docker-compose.security.writable-filesystem-service.writable-filesystem-service"
+                ]
+              }
+            },
+            {
+              "id": "glog-b41b36ce-1eec-4309-b5de-ce17fc42dd62",
+              "help": {
+                "text": "",
+                "markdown": "### Description\n\nThe \"Privilege Escalation Vulnerability in 'mongo' Service\" refers to a security flaw where an attacker can gain unauthorized elevated access to the MongoDB service. This can occur due to misconfigurations or insecure default settings, allowing attackers to exploit the service and potentially access or manipulate sensitive data.\n\n### General Mitigation Advice\n\n1. **Authentication and Authorization**: Ensure that MongoDB authentication is enabled. Use role-based access control (RBAC) to limit user permissions to the minimum necessary.\n\n2. **Network Security**: Bind MongoDB to localhost or use a VPN to restrict access to trusted networks. Avoid exposing MongoDB directly to the internet.\n\n3. **Data Encryption**: Use TLS/SSL to encrypt data in transit. Enable encryption at rest to protect stored data.\n\n4. **Regular Updates**: Keep MongoDB and its dependencies up to date with the latest security patches.\n\n5. **Configuration Management**: Use configuration management tools to enforce security best practices and prevent unauthorized changes.\n\n### Source Code Fix Recommendation\n\nTo mitigate the privilege escalation vulnerability, modify the MongoDB configuration to enable authentication and restrict network access. Below is an example of a secure configuration:\n\n```yaml\nmongo:\n    image: mongo:latest\n    ports:\n      - 127.0.0.1:27017:27017  # Bind to localhost\n    environment:\n      - MONGO_INITDB_ROOT_USERNAME=admin\n      - MONGO_INITDB_ROOT_PASSWORD=securepassword\n    volumes:\n      - mongo:/data/db\n    command: --auth  # Enable authentication\n```\n\n### Library Dependencies\n\nTo execute the above configuration, you need the following dependencies:\n\n- Docker: To run the MongoDB container.\n- MongoDB: The database service itself.\n\n### OWASP Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-269: Improper Privilege Management](https://cwe.mitre.org/data/definitions/269.html)\n- [CWE-284: Improper Access Control](https://cwe.mitre.org/data/definitions/284.html)"
+              },
+              "properties": {
+                "tags": [
+                  "resources.rules.no-new-privileges"
+                ]
+              }
+            },
+            {
+              "id": "glog-58f20c57-ef2b-4129-9e22-82ccf50fa83d",
+              "help": {
+                "text": "",
+                "markdown": "### Description\n\nThe \"Privilege Escalation Vulnerability in 'mongo' Service\" in JavaScript typically arises when an application improperly manages user permissions and access controls when interacting with a MongoDB database. This can allow an attacker to gain unauthorized access to sensitive data or perform actions that should be restricted. The vulnerability often occurs due to improper validation of user roles or insufficient checks on user input, leading to unauthorized privilege escalation.\n\n### General Mitigation Advice\n\n1. **Implement Proper Access Controls**: Ensure that your application enforces strict access controls based on user roles. Use role-based access control (RBAC) to limit what actions users can perform.\n\n2. **Validate User Input**: Always validate and sanitize user inputs to prevent injection attacks that could lead to privilege escalation.\n\n3. **Use Least Privilege Principle**: Configure your MongoDB user accounts with the least privileges necessary for their tasks. Avoid using admin accounts for regular operations.\n\n4. **Regular Security Audits**: Conduct regular security audits and code reviews to identify and fix potential vulnerabilities.\n\n5. **Update Dependencies**: Keep your MongoDB and related libraries up to date with the latest security patches.\n\n### Source Code Fix Recommendation\n\nTo mitigate privilege escalation vulnerabilities, ensure that your code properly checks user roles and permissions before executing any database operations. Here's an example fix:\n\n```javascript\n// Required library dependencies\nconst { MongoClient } = require('mongodb');\n\n// Example function to check user role before performing an action\nasync function performDatabaseAction(userId, action) {\n    const client = new MongoClient('mongodb://localhost:27017', { useUnifiedTopology: true });\n\n    try {\n        await client.connect();\n        const db = client.db('yourDatabase');\n        const usersCollection = db.collection('users');\n\n        // Fetch user role from the database\n        const user = await usersCollection.findOne({ _id: userId });\n        if (!user) {\n            throw new Error('User not found');\n        }\n\n        // Check if the user has the required role\n        if (user.role !== 'admin') {\n            throw new Error('Insufficient privileges');\n        }\n\n        // Perform the action if the user has the required role\n        await action();\n    } catch (error) {\n        console.error('Error performing database action:', error);\n    } finally {\n        await client.close();\n    }\n}\n```\n\n### Library Dependencies\n\nTo execute the above code example, you need the following library:\n\n- `mongodb`: This is the official MongoDB driver for Node.js, which allows you to interact with MongoDB databases.\n\n### Relevant OWASP Resources\n\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n- [OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-269: Improper Privilege Management](https://cwe.mitre.org/data/definitions/269.html)"
+              },
+              "properties": {
+                "tags": [
+                  "yaml.docker-compose.security.no-new-privileges.no-new-privileges"
+                ]
+              }
+            },
+            {
+              "id": "glog-89208cc6-fb75-4f57-8b58-fe5a6e47b7c3",
               "help": {
                 "text": "",
                 "markdown": "### Description\n\nThe \"Writable Root Filesystem Vulnerability in 'mongo' Service\" refers to a security issue where the root filesystem of a container running the MongoDB service is writable. This can lead to potential security risks, such as unauthorized modifications to the filesystem, privilege escalation, or data tampering. In the context of Docker, ensuring that the root filesystem is read-only can help mitigate these risks by preventing unauthorized changes to the container's environment.\n\n### General Mitigation Advice\n\n1. **Use Read-Only Filesystem**: Configure the container to use a read-only root filesystem. This can be done by adding the `read_only: true` option in the Docker Compose file.\n\n2. **Limit Container Privileges**: Use the `--cap-drop` option to drop unnecessary Linux capabilities and the `--security-opt` option to enforce security policies.\n\n3. **Use Non-Root User**: Run the MongoDB service as a non-root user to minimize the impact of a potential compromise.\n\n4. **Regular Updates**: Keep the MongoDB image and all dependencies up to date to ensure that any known vulnerabilities are patched.\n\n5. **Network Security**: Implement network security measures such as firewalls and network segmentation to limit access to the MongoDB service.\n\n### Source Code Fix Recommendation\n\nTo address the writable root filesystem vulnerability, modify the Docker Compose configuration as follows:\n\n```yaml\nmongo:\n    image: mongo:latest\n    ports:\n      - 27017:27017\n    environment:\n      - MONGO_DATA_DIR=/data/db\n    volumes:\n      - mongo:/data/db\n    read_only: true\n    security_opt:\n      - no-new-privileges:true\n    user: \"1001:1001\"  # Use a non-root user\n```\n\n### Library Dependencies\n\nThe following dependencies are required to execute the MongoDB service properly:\n\n- Docker\n- Docker Compose\n\n### OWASP Resources\n\n- [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)\n- [OWASP Top Ten](https://owasp.org/www-project-top-ten/)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-732: Incorrect Permission Assignment for Critical Resource](https://cwe.mitre.org/data/definitions/732.html)\n- [CWE-250: Execution with Unnecessary Privileges](https://cwe.mitre.org/data/definitions/250.html)"
@@ -272,6 +248,18 @@
               "properties": {
                 "tags": [
                   "resources.rules.writable-filesystem-service"
+                ]
+              }
+            },
+            {
+              "id": "glog-5d5b7b02-2eb6-4b81-96b5-2e10995075eb",
+              "help": {
+                "text": "",
+                "markdown": "### Description\n\nThe \"User-Input Controlled Parameter Vulnerability in JavaScript Sink\" refers to a security issue where user input is directly used in a JavaScript sink function without proper validation or sanitization. This can lead to various types of attacks, such as Cross-Site Scripting (XSS), if the input is not properly handled. In the provided code snippet, the vulnerability arises from the use of `msg.msg` in the `success` callback function, which directly injects user-controlled data into the HTML of the page.\n\n### General Mitigation Advice\n\n1. **Input Validation and Sanitization**: Always validate and sanitize user inputs on both client and server sides to ensure that they do not contain malicious code.\n2. **Output Encoding**: Use proper encoding techniques when displaying user input in the HTML to prevent XSS attacks.\n3. **Content Security Policy (CSP)**: Implement a strong CSP to mitigate the impact of XSS by restricting the sources from which scripts can be loaded.\n4. **Use Security Libraries**: Utilize libraries that provide built-in protection against common vulnerabilities.\n\n### Source Code Fix Recommendation\n\nTo mitigate the vulnerability in the provided code, ensure that the data being inserted into the HTML is properly sanitized or encoded. Here is a revised version of the code:\n\n```javascript\n$.ajax({\n    type: \"POST\",\n    url: \"/user/login\",\n    dataType: 'json',\n    contentType: 'application/json',\n    data: JSON.stringify(post_data),\n    success: function(msg){\n        // Use a library like DOMPurify to sanitize the HTML\n        var cleanMsg = DOMPurify.sanitize(msg.msg);\n        $('#response').html(cleanMsg);\n    },\n    error: function(){\n        alert(\"failure\");\n    }\n});\n```\n\n### Library Dependencies\n\nTo execute the code properly, the following library dependencies are required:\n\n- jQuery: The code uses jQuery for AJAX requests and DOM manipulation.\n- DOMPurify: A library used to sanitize HTML to prevent XSS attacks.\n\n### OWASP Resources\n\n- [OWASP Cross-Site Scripting (XSS) Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)\n\n### Common Weakness Enumeration (CWE)\n\n- [CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')](https://cwe.mitre.org/data/definitions/79.html)"
+              },
+              "properties": {
+                "tags": [
+                  "resources.rules.dom-xss-finder"
                 ]
               }
             }
@@ -287,7 +275,7 @@
       "language": "en-US",
       "results": [
         {
-          "ruleId": "glog-0e5ac7b2-9a87-4711-a934-776d7af84f6d",
+          "ruleId": "glog-de64a87c-a468-4a25-8d7b-35d25871fb76",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -313,74 +301,12 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "9d2e5e2cb837c434c74f66718d21d2a58bcbbb325f8bfa6d1704fc7d828e68d8a926885eb2ea134cd731b022198e642ed54ac38d3ff88317f300d819f5c37f08_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-1079bb59-f693-4cf8-9036-6624f164751c",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Code Injection Vulnerability in GitHub Actions Using Untrusted `github` Context Data"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": ".github/glog-action/action.yml",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 41,
-                  "startColumn": 7,
-                  "endLine": 41,
-                  "endColumn": 108,
-                  "snippet": {
-                    "text": "      run: echo \"${{ inputs.github-token }}\" | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
-                  }
-                }
-              }
-            }
-          ],
-          "fingerprints": {
-            "matchBasedId/v1": "requires login"
-          },
-          "properties": {}
-        },
-        {
-          "ruleId": "glog-ce2f994f-d0a8-41cb-aeb9-f9836ed48951",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Code Injection Vulnerability in GitHub Actions Using Untrusted `github` Context Data"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": ".github/glog-action/action.yml",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 45,
-                  "startColumn": 7,
-                  "endLine": 56,
-                  "endColumn": 19,
-                  "snippet": {
-                    "text": "      run: |\n        TOOL_CMD=\"${{ github.action_path }}/glog.sh scan --path $GITHUB_WORKSPACE\"\n        if [ ! -z \"${{ inputs.lang }}\" ]; then\n          TOOL_CMD+=\" --lang ${{ inputs.lang }}\"\n        fi\n        if [ ! -z \"${{ inputs.ignore }}\" ]; then\n          TOOL_CMD+=\" --ignore ${{ inputs.ignore }}\"\n        fi\n        if [ ! -z \"${{ inputs.client }}\" ]; then\n          TOOL_CMD+=\" --client ${{ inputs.client }}\"\n        fi\n        $TOOL_CMD"
-                  }
-                }
-              }
-            }
-          ],
-          "fingerprints": {
-            "matchBasedId/v1": "requires login"
-          },
-          "properties": {}
-        },
-        {
-          "ruleId": "glog-e0f88970-d975-488d-abf2-60ba8bc49d1e",
+          "ruleId": "glog-b1598f5f-bdda-471b-8829-9cdba5f5f93a",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -406,43 +332,12 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "f8598ed44dab1eac24010b0f3c943e35fcda43acb56e9a9f7a03dc36f43bdf4312e5fdc2b0943228c669f89cb2d819e35ff51991f53e88fb665f380b4b95b205_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-953b5801-8c2d-4ca2-a0cb-870286f5e398",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Missing CSRF Protection in Express Application"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "app/routes/default.route.js",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 2,
-                  "startColumn": 7,
-                  "endLine": 2,
-                  "endColumn": 22,
-                  "snippet": {
-                    "text": "const app = express();"
-                  }
-                }
-              }
-            }
-          ],
-          "fingerprints": {
-            "matchBasedId/v1": "requires login"
-          },
-          "properties": {}
-        },
-        {
-          "ruleId": "glog-910c7f5f-fdf2-4000-87f4-1644f32545e2",
+          "ruleId": "glog-02e58524-6abf-4892-98c7-38b971735188",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -468,43 +363,43 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "3c496f8cdb917394c8c8fe2aa67d03fbab71886613cd025edeed93863377936842a2eed0c664d5c09587cdf8c7e178206f6289c391335d13be6b842017d86235_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-889e4350-5df3-490f-bf7b-a7a325c273d6",
+          "ruleId": "glog-263fafc6-e863-4289-8ad8-b318572b8036",
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "XSS vulnerability from user-controlled HTML data"
+            "text": "Missing CSRF Protection in Express Application"
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "app/routes/user.route.js",
+                  "uri": "app/routes/default.route.js",
                   "uriBaseId": "%SRCROOT%"
                 },
                 "region": {
-                  "startLine": 23,
-                  "startColumn": 5,
-                  "endLine": 23,
-                  "endColumn": 45,
+                  "startLine": 2,
+                  "startColumn": 7,
+                  "endLine": 2,
+                  "endColumn": 22,
                   "snippet": {
-                    "text": "\t\t\t\tconsole.log(\"Data Retrieved: \" + users);"
+                    "text": "const app = express();"
                   }
                 }
               }
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "eba19dad71a92dd00c3350c27423af16ec75e5d1cc639db51ed97d340caf50a80cfce1c59c19791c5b21532f2d15a8c38d36c4be6234a2411e3a93953a39d302_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-67b2d93e-eaf4-4204-b233-22e2e372714e",
+          "ruleId": "glog-490a6631-0aba-4eb9-8cb9-cb7fefa2b895",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -530,43 +425,12 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "dc1f86e9ef07a6d32705bd9ad9ffc3785f67cc1c1b9be8712b9a26d1bd51f629c8d7291d33de0b49429ce9657e233df53cb97c093950bd5de130002add399ec1_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-6d7791aa-ef61-4467-bea4-44c7ee6920fa",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "XSS vulnerability from user-controlled HTML data"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "app/routes/user.route.js",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 53,
-                  "startColumn": 5,
-                  "endLine": 53,
-                  "endColumn": 45,
-                  "snippet": {
-                    "text": "\t\t\t\tconsole.log(\"Data Retrieved: \" + users);"
-                  }
-                }
-              }
-            }
-          ],
-          "fingerprints": {
-            "matchBasedId/v1": "requires login"
-          },
-          "properties": {}
-        },
-        {
-          "ruleId": "glog-39c1df5c-ac47-433c-9987-c9260e8bbdbb",
+          "ruleId": "glog-1c5b52f0-22d1-4816-8253-1f0740913a95",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -592,12 +456,74 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "3ed767162fb1079fee1e0841a91a7c1f7ce25a8961bc537a674b2b0d7d67e51c0840b9c915fad5b490f1633e9b7fceb1de2fd7799e8f654480146338242cb9fa_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-9b70dad4-2420-45ff-a4f3-fe9438983b03",
+          "ruleId": "glog-7b1497d5-df98-4d92-961a-b66766015530",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "XSS vulnerability from user-controlled HTML data"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "app/routes/user.route.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 23,
+                  "startColumn": 5,
+                  "endLine": 23,
+                  "endColumn": 45,
+                  "snippet": {
+                    "text": "\t\t\t\tconsole.log(\"Data Retrieved: \" + users);"
+                  }
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "matchBasedId/v1": "f494e1c220e3b1e2bd9fee5acafcb96dd73e273cbe805f3da3abecb01e5ecd8dea28063f79db4ab72c7281eb9f61a6baabe3e1e35f2da416ff454372f4d36306_0"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "glog-e81095c9-ffeb-4d13-a358-4cc99f0b5006",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "XSS vulnerability from user-controlled HTML data"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "app/routes/user.route.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 53,
+                  "startColumn": 5,
+                  "endLine": 53,
+                  "endColumn": 45,
+                  "snippet": {
+                    "text": "\t\t\t\tconsole.log(\"Data Retrieved: \" + users);"
+                  }
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "matchBasedId/v1": "f494e1c220e3b1e2bd9fee5acafcb96dd73e273cbe805f3da3abecb01e5ecd8dea28063f79db4ab72c7281eb9f61a6baabe3e1e35f2da416ff454372f4d36306_1"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "glog-cbb33a9b-ec4a-4dc2-b87d-24f1dc97113a",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -623,12 +549,12 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "f494e1c220e3b1e2bd9fee5acafcb96dd73e273cbe805f3da3abecb01e5ecd8dea28063f79db4ab72c7281eb9f61a6baabe3e1e35f2da416ff454372f4d36306_2"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-20165a83-20b9-4c6b-be76-157e7622faf7",
+          "ruleId": "glog-3cfeab1a-5d4c-44f0-9dff-48c8530ec366",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -654,74 +580,12 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "f494e1c220e3b1e2bd9fee5acafcb96dd73e273cbe805f3da3abecb01e5ecd8dea28063f79db4ab72c7281eb9f61a6baabe3e1e35f2da416ff454372f4d36306_3"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-079da4ac-a3f9-402c-a8c6-3a00b2b5588c",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "XSS Vulnerability from User-Controlled HTML Data"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "app/routes/user.route.js",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 130,
-                  "startColumn": 2,
-                  "endLine": 130,
-                  "endColumn": 59,
-                  "snippet": {
-                    "text": "\tconsole.log(\"Login request \" + JSON.stringify(req.body));"
-                  }
-                }
-              }
-            }
-          ],
-          "fingerprints": {
-            "matchBasedId/v1": "requires login"
-          },
-          "properties": {}
-        },
-        {
-          "ruleId": "glog-80b371ee-d090-4b7e-90dd-786fe0a64c03",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Use of alert() in Production Code"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "app/static/js/login.js",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 20,
-                  "startColumn": 9,
-                  "endLine": 20,
-                  "endColumn": 41,
-                  "snippet": {
-                    "text": "        alert(JSON.stringify(post_data));"
-                  }
-                }
-              }
-            }
-          ],
-          "fingerprints": {
-            "matchBasedId/v1": "requires login"
-          },
-          "properties": {}
-        },
-        {
-          "ruleId": "glog-d316fdb4-cfcb-4ef9-95b1-66d692ea7afe",
+          "ruleId": "glog-b05b031f-3ee4-4348-838e-192c0b6e82a2",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -747,12 +611,74 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "1906f144f05d4a511a239ce6e5db9947517597c93246f9566426d7415faba55efe34e820f77d95fe8cbfb71d747bc5384250775fc099a42c6dc1327ad43ef84f_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-ffdc1b66-fe15-48c7-852b-2c4017532db6",
+          "ruleId": "glog-12142600-dad9-41fb-ba29-cf5f0df6be6c",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "XSS Vulnerability from User-Controlled HTML Data"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "app/routes/user.route.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 130,
+                  "startColumn": 2,
+                  "endLine": 130,
+                  "endColumn": 59,
+                  "snippet": {
+                    "text": "\tconsole.log(\"Login request \" + JSON.stringify(req.body));"
+                  }
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "matchBasedId/v1": "4122e70af7343b3b548938e73c7c91d1ee86b8a1ad6d377114abd0b73035a58566547f8cbc7ad0f6a7f3925eeb96aed3468c058b2b39621b1c7bb90659e8eb55_0"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "glog-8d617c1b-eb7a-4c85-bbf4-e0468a0667a0",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Use of alert() in Production Code"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "app/static/js/login.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 20,
+                  "startColumn": 9,
+                  "endLine": 20,
+                  "endColumn": 41,
+                  "snippet": {
+                    "text": "        alert(JSON.stringify(post_data));"
+                  }
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "matchBasedId/v1": "d594a179c79372cfbd68c5ef511adaef088fcf3c2c73cc59daed8aa3f5e387251d7fa156e8a77705289eea4db79954c87f3e5dcef1586fd4beb0f130c91d643b_0"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "glog-c75c5df9-2545-4367-920a-2147a79b5602",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -778,12 +704,12 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "1bf0a03b4470c1f9eb2bdc09850c52d53ba21c3bba8b2496ea8526cbb1f09faab01c9067d57da1da47bfd560074c797cdf7d61b817573ef763d57c6442c4c195_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-8597c8e9-521b-4902-b320-b48997f3ab5c",
+          "ruleId": "glog-0729dd3e-333c-43d5-8128-f3a17a872837",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -809,105 +735,12 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "d589b01a613f4d9b47c47a9e74f349c3dba03c8cee3bec9f109056fd6ea3461d2d52cf8079fb87d7bbf94ca525c9457a41eca76085f3ea1e996a7946745e4002_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-7c60b089-3332-4858-9eab-5c6ca228a5de",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Writable Root Filesystem Vulnerability in 'mongo' Service"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "docker-compose.yml",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 17,
-                  "startColumn": 3,
-                  "endLine": 17,
-                  "endColumn": 8,
-                  "snippet": {
-                    "text": "  mongo:"
-                  }
-                }
-              }
-            }
-          ],
-          "fingerprints": {
-            "matchBasedId/v1": "requires login"
-          },
-          "properties": {}
-        },
-        {
-          "ruleId": "glog-284888d8-4bc2-4038-8a0d-b5f1959943ce",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Privilege Escalation Vulnerability in 'mongo' Service"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "docker-compose.yml",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 17,
-                  "startColumn": 3,
-                  "endLine": 17,
-                  "endColumn": 8,
-                  "snippet": {
-                    "text": "  mongo:"
-                  }
-                }
-              }
-            }
-          ],
-          "fingerprints": {
-            "matchBasedId/v1": "requires login"
-          },
-          "properties": {}
-        },
-        {
-          "ruleId": "glog-b3e09015-3457-4d70-a8cf-d59420703ad6",
-          "kind": "fail",
-          "level": "warning",
-          "message": {
-            "text": "Privilege Escalation Vulnerability in 'mongo' Service"
-          },
-          "locations": [
-            {
-              "physicalLocation": {
-                "artifactLocation": {
-                  "uri": "docker-compose.yml",
-                  "uriBaseId": "%SRCROOT%"
-                },
-                "region": {
-                  "startLine": 17,
-                  "startColumn": 3,
-                  "endLine": 24,
-                  "endColumn": 23,
-                  "snippet": {
-                    "text": "  mongo:\n    image: mongo:latest\n    ports:\n      - 27017:27017\n    environment:\n      - MONGO_DATA_DIR=/data/db\n    volumes:\n      - mongo:/data/db"
-                  }
-                }
-              }
-            }
-          ],
-          "fingerprints": {
-            "matchBasedId/v1": "requires login"
-          },
-          "properties": {}
-        },
-        {
-          "ruleId": "glog-10881669-b328-4465-becd-e56016ba2390",
+          "ruleId": "glog-4abac265-866b-4867-802f-f9f1e9c8f922",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -933,12 +766,105 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "71feed22db66a617c914a09d8f00a34671e5e5ecabae081fa070f32fc86b158e8945d6bc48ae61e200eee9061203f5bae8a44802df343883243a544286988fb8_0"
           },
           "properties": {}
         },
         {
-          "ruleId": "glog-b16a4659-a301-43a7-abfe-fa5d154cc943",
+          "ruleId": "glog-94888d3a-222e-4222-8c0f-8b4f268f37a1",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Writable Root Filesystem Vulnerability in 'mongo' Service"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "docker-compose.yml",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 3,
+                  "endLine": 17,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "  mongo:"
+                  }
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "matchBasedId/v1": "30fff5fe559706a7a071cf3943c3cc8a129b521b45abeb882c91617afb9d3cfcde04cd622932a7b92db67f4b385c6fc926557a8f141347aa4a9b6055aeb427d4_0"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "glog-b41b36ce-1eec-4309-b5de-ce17fc42dd62",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Privilege Escalation Vulnerability in 'mongo' Service"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "docker-compose.yml",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 3,
+                  "endLine": 24,
+                  "endColumn": 23,
+                  "snippet": {
+                    "text": "  mongo:\n    image: mongo:latest\n    ports:\n      - 27017:27017\n    environment:\n      - MONGO_DATA_DIR=/data/db\n    volumes:\n      - mongo:/data/db"
+                  }
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "matchBasedId/v1": "bac8cdb460e93196893e9c8ebf75667f1bf3efedbc718273e71401900874539de161af073beb2337f5af794793e5f4dae270ee5a135385c5eb5199eb906e5c04_0"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "glog-58f20c57-ef2b-4129-9e22-82ccf50fa83d",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "Privilege Escalation Vulnerability in 'mongo' Service"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "docker-compose.yml",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 3,
+                  "endLine": 17,
+                  "endColumn": 8,
+                  "snippet": {
+                    "text": "  mongo:"
+                  }
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "matchBasedId/v1": "c9ec6ca4a5ced33a96540acdaf70d799bf13e3d0e00660617106b9359e2654413b2010a91a963fa13d5ec4eb91801f864ea10169a6e59e22365bb716fbe70443_0"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "glog-89208cc6-fb75-4f57-8b58-fe5a6e47b7c3",
           "kind": "fail",
           "level": "warning",
           "message": {
@@ -964,7 +890,38 @@
             }
           ],
           "fingerprints": {
-            "matchBasedId/v1": "requires login"
+            "matchBasedId/v1": "49dc0835ca80dddb912e3002bcb571303b9c3285902588f0dd3bbfb6f4ac4fcc1bf662fd389ac82978e6b0275e92a743ce2d7bd34c7a7123555a990c0ef42241_0"
+          },
+          "properties": {}
+        },
+        {
+          "ruleId": "glog-5d5b7b02-2eb6-4b81-96b5-2e10995075eb",
+          "kind": "fail",
+          "level": "warning",
+          "message": {
+            "text": "User-Input Controlled Parameter Vulnerability in JavaScript Sink"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "app/static/js/login.js",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 6,
+                  "endLine": 33,
+                  "endColumn": 11,
+                  "snippet": {
+                    "text": "    \t$.ajax({\n     \t\ttype: \"POST\",\n \t\t\turl: \"/user/login\",\n \t\t\tdataType: 'json',\n            contentType: 'application/json',\n \t\t\tdata: JSON.stringify(post_data),\n         \tsuccess: function(msg){\n            \t$('#response').html(msg.msg);\n         \t},\n \t\t\terror: function(){\n \t\t\t\talert(\"failure\");\n \t\t\t}\n       \t});"
+                  }
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "matchBasedId/v1": "426c840ec926bbd7d450ab2591306dff83ac0184dab7b61f55bdb897f4bc2bc3bf48718079c64c0976756fee5d5e1c32520b3e7178a3ef56bb66648e887fa4c3_0"
           },
           "properties": {}
         }
